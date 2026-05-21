@@ -1,9 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Star, Heart, Minus, Plus, Truck, ShieldCheck, Sparkles, ChevronRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { fetchProductBySlug, fetchProducts, type Product } from "@/lib/products";
+import { useCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => {
@@ -48,6 +49,14 @@ function ProductPage() {
   const [size, setSize] = useState<string | undefined>(product.sizes?.[2]);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "info" | "reviews">("desc");
+  const { add } = useCart();
+  const navigate = useNavigate();
+
+  const handleAddToCart = () => add(product.slug, qty, size);
+  const handleBuyNow = () => {
+    add(product.slug, qty, size);
+    navigate({ to: "/checkout" });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -75,8 +84,13 @@ function ProductPage() {
                 </button>
               ))}
             </div>
-            <div className="flex-1 aspect-square rounded-2xl overflow-hidden bg-secondary">
+            <div className="relative flex-1 aspect-square rounded-2xl overflow-hidden bg-secondary">
               <img src={gallery[active]} alt={product.name} className="w-full h-full object-cover" />
+              {product.old && (
+                <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs uppercase tracking-wider px-3 py-1 rounded-full">
+                  Sale
+                </span>
+              )}
             </div>
           </div>
 
@@ -101,12 +115,12 @@ function ProductPage() {
             )}
 
             <div className="flex items-baseline gap-3 mb-5">
-              <span className="text-3xl font-bold">₹{product.price}</span>
+              <span className="text-3xl font-bold text-primary">₹{product.price}</span>
               {product.old && (
                 <>
                   <span className="text-lg text-muted-foreground line-through">₹{product.old}</span>
-                  <span className="text-sm text-green-600 font-medium">
-                    {Math.round(((product.old - product.price) / product.old) * 100)}% off
+                  <span className="text-sm bg-secondary text-secondary-foreground px-2 py-0.5 rounded font-medium">
+                    Save ₹{product.old - product.price}
                   </span>
                 </>
               )}
@@ -120,7 +134,7 @@ function ProductPage() {
 
             {product.sizes && product.sizes.length > 0 && (
               <div className="mb-6">
-                <p className="text-sm font-medium mb-2">Size</p>
+                <p className="text-sm font-medium mb-2">Beads Size (mm)</p>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((s) => (
                     <button
@@ -145,7 +159,10 @@ function ProductPage() {
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-              <button className="flex-1 bg-foreground text-background rounded-full py-3 font-medium hover:bg-primary transition-colors">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-foreground text-background rounded-full py-3 font-medium hover:bg-primary transition-colors"
+              >
                 Add to Cart
               </button>
               <button className="p-3 border border-border rounded-full hover:border-primary" aria-label="Wishlist">
@@ -153,7 +170,10 @@ function ProductPage() {
               </button>
             </div>
 
-            <button className="w-full bg-foreground text-background rounded-full py-3 font-medium hover:bg-primary transition-colors mb-6">
+            <button
+              onClick={handleBuyNow}
+              className="w-full bg-primary text-primary-foreground rounded-full py-3 font-medium hover:bg-primary/90 transition-colors mb-6"
+            >
               Buy Now
             </button>
 
@@ -177,9 +197,9 @@ function ProductPage() {
               </div>
             </div>
 
-            {product.categories && (
+            {product.categoryName  && (
               <p className="text-xs text-muted-foreground mt-6">
-                <span className="font-medium text-foreground">Categories:</span> {product.categories.join(", ")}
+                <span className="font-medium text-foreground">Category:</span> {product.categoryName}
                 {product.stone && <> · <span className="font-medium text-foreground">Stone:</span> {product.stone}</>}
               </p>
             )}
