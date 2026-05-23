@@ -102,7 +102,7 @@ User Question:
     if static:
         # For testing without API calls
         logger.info("Using static response for testing.")
-        return ChatResponse(reply="Based on your question, I recommend the Amethyst Bracelet for stress relief and better sleep.")
+        return ChatResponse(reply="Based on your problem, I recommend the Amethyst Bracelet for stress relief and better sleep.")
     try:
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",

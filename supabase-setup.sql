@@ -73,3 +73,16 @@ INSERT INTO products (title, description, price, discont_price, image_url) VALUE
   1899, 2399,
   'https://xxxxxxxxxxxxxxxxxxxx.supabase.co/storage/v1/object/public/products/cat-ring.jpg'
 );
+
+
+
+CREATE TABLE IF NOT EXISTS categories (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name        TEXT NOT NULL UNIQUE,
+  slug        TEXT NOT NULL UNIQUE,
+  image_url   TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE products
+ADD COLUMN category_id BIGINT REFERENCES categories(id);

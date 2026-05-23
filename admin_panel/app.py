@@ -16,6 +16,12 @@ CATEGORY_BUCKET = os.getenv("CATEGORY_BUCKET")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
+def upload_image(bucket, image):
+    name = f"{uuid.uuid4()}-{image.filename}"
+    supabase.storage.from_(bucket).upload(name, image.read(), {"content-type": image.content_type})
+    return f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/{name}"
+
+
 # ---------------------------
 # HOME PAGE
 # ---------------------------
@@ -53,97 +59,47 @@ def home():
 # ---------------------------
 @app.route('/add-category', methods=['POST'])
 def add_category():
-
     try:
-
-        name = request.form.get("name")
-        slug = request.form.get("slug")
-
         image = request.files.get("image")
-
-        image_url = None
-
-        if image:
-
-            image_name = f"category-{uuid.uuid4()}-{image.filename}"
-
-            supabase.storage.from_(CATEGORY_BUCKET).upload(
-                image_name,
-                image.read(),
-                {"content-type": image.content_type}
-            )
-
-            image_url = (
-                f"{SUPABASE_URL}/storage/v1/object/public/"
-                f"{CATEGORY_BUCKET}/{image_name}"
-            )
-
         supabase.table("categories").insert({
-            "name": name,
-            "slug": slug,
-            "image_url": image_url
+            "name": request.form.get("name"),
+            "slug": request.form.get("slug"),
+            "image_url": upload_image(CATEGORY_BUCKET, image) if image else None
         }).execute()
-
-        return jsonify({
-            "success": True,
-            "message": "Category added successfully"
-        })
-
+        return jsonify({"success": True, "message": "Category added successfully"})
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        })
+        return jsonify({"success": False, "message": str(e)})
 
 
 # ---------------------------
-# ADD PRODUCT
+# ADD PRODUCT (single or bulk)
 # ---------------------------
 @app.route('/add-product', methods=['POST'])
 def add_product():
-
     try:
+        # Bulk insert via JSON: [{title, slug, description, price, discont_price, category_id, image_url}, ...]
+        if request.is_json:
+            products = request.get_json()
+            if not isinstance(products, list):
+                products = [products]
+            supabase.table("products").insert(products).execute()
+            return jsonify({"success": True, "message": f"{len(products)} product(s) added"})
 
-        title = request.form.get('title')
-        description = request.form.get('description')
-        price = request.form.get('price')
-        discount_price = request.form.get('discount_price')
-        category_id = request.form.get('category_id')
-
+        # Single product via form + image upload
         image = request.files.get('image')
-
-        image_name = f"{uuid.uuid4()}-{image.filename}"
-
-        supabase.storage.from_(PRODUCT_BUCKET).upload(
-            image_name,
-            image.read(),
-            {"content-type": image.content_type}
-        )
-
-        image_url = (
-            f"{SUPABASE_URL}/storage/v1/object/public/"
-            f"{PRODUCT_BUCKET}/{image_name}"
-        )
-
         supabase.table("products").insert({
-            "title": title,
-            "description": description,
-            "price": price,
-            "discont_price": discount_price,
-            "image_url": image_url,
-            "category_id": category_id
+            "title": request.form.get('title'),
+            "slug": request.form.get('slug'),
+            "description": request.form.get('description'),
+            "price": request.form.get('price'),
+            "discont_price": request.form.get('discont_price'),
+            "image_url": upload_image(PRODUCT_BUCKET, image),
+            "category_id": request.form.get('category_id') or None
         }).execute()
-
-        return jsonify({
-            "success": True,
-            "message": "Product added successfully"
-        })
+        return jsonify({"success": True, "message": "Product added successfully"})
 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        })
+        return jsonify({"success": False, "message": str(e)})
 
 
 # ---------------------------
@@ -151,21 +107,11 @@ def add_product():
 # ---------------------------
 @app.route('/delete-product/<int:id>', methods=['DELETE'])
 def delete_product(id):
-
     try:
-
         supabase.table("products").delete().eq("id", id).execute()
-
-        return jsonify({
-            "success": True
-        })
-
+        return jsonify({"success": True})
     except Exception as e:
-
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        })
+        return jsonify({"success": False, "message": str(e)})
 
 
 if __name__ == "__main__":

@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Loader2, Trash2 } from "lucide-react";
 
 type Message = { role: "user" | "bot"; text: string };
 const STORAGE_KEY = "shubh_chat_v1";
+const WELCOME: Message = { role: "bot", text: "👋 Hi! I'm Shubhanjali Assistant. Ask me anything about our crystals, bracelets, or healing gemstones. 💎" };
 
 export function AiChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
+      return raw ? JSON.parse(raw) : [WELCOME];
+    } catch { return [WELCOME]; }
   });
+
+  const clearChat = () => {
+    setMessages([WELCOME]);
+    localStorage.removeItem(STORAGE_KEY);
+  };
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -82,19 +88,18 @@ export function AiChat() {
                 <p className="text-[10px] opacity-80 mt-0.5">Ask about crystals & healing</p>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="p-1 rounded-full hover:bg-primary-foreground/20">
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={clearChat} title="Clear chat" className="p-1 rounded-full hover:bg-primary-foreground/20">
+                <Trash2 className="h-4 w-4" />
+              </button>
+              <button onClick={() => setOpen(false)} className="p-1 rounded-full hover:bg-primary-foreground/20">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.length === 0 && (
-              <div className="text-center text-muted-foreground text-sm pt-8">
-                <Bot className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>Hi! Ask me anything about our crystals, bracelets, or healing gemstones. 💎</p>
-              </div>
-            )}
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>

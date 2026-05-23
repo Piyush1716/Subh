@@ -33,3 +33,4 @@ dist-ssr
 .env
 __pycache__
 *.pyc
+admin_panel/scrapper/
