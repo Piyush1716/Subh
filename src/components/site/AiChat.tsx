@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Bot, User, Loader2, Trash2 } from "lucide-react
 
 type Message = { role: "user" | "bot"; text: string };
 const STORAGE_KEY = "shubh_chat_v1";
-const WELCOME: Message = { role: "bot", text: "👋 Hi! I'm Shubhanjali Assistant. Ask me anything about our crystals, bracelets, or healing gemstones. 💎" };
+const WELCOME: Message = { role: "bot", text: "👋 Hi! I'm GajananGems Assistant. Ask me anything about our crystals, bracelets, or healing gemstones. 💎" };
 
 export function AiChat() {
   const [open, setOpen] = useState(false);
@@ -84,7 +84,7 @@ export function AiChat() {
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               <div>
-                <p className="font-semibold text-sm leading-none">Shubhanjali Assistant</p>
+                <p className="font-semibold text-sm leading-none">GajananGems Assistant</p>
                 <p className="text-[10px] opacity-80 mt-0.5">Ask about crystals & healing</p>
               </div>
             </div>

@@ -74,9 +74,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Shubhanjali — Healing Crystals, Bracelets & Spiritual Gifts" },
+      { title: "GajananGems — Healing Crystals, Bracelets & Spiritual Gifts" },
       { name: "description", content: "Shop authentic healing crystals, gemstone bracelets, crystal trees, pyramids and spiritual decor. Free shipping on orders over ₹2000." },
-      { property: "og:title", content: "Shubhanjali — Healing Crystals & Gemstone Jewellery" },
+      { property: "og:title", content: "GajananGems — Healing Crystals & Gemstone Jewellery" },
       { property: "og:description", content: "Authentic crystals, bracelets, trees, pyramids and spiritual gifts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

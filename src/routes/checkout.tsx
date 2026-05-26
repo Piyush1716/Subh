@@ -7,7 +7,7 @@ import { useState } from "react";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Shubhanjali" },
+      { title: "Checkout — GajananGems" },
       { name: "description", content: "Securely complete your order for healing crystals and gemstone jewellery." },
     ],
   }),

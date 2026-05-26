@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="bg-foreground text-background mt-12">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-14 grid md:grid-cols-4 gap-10">
         <div>
-          <h3 className="text-2xl font-display font-semibold mb-3">shubhanjali</h3>
+          <h3 className="text-2xl font-display font-semibold mb-3">GajananGems</h3>
           <p className="text-sm text-background/70 leading-relaxed">
             Your trusted source for authentic healing crystals, gemstone jewellery and spiritual decor since 2012.
           </p>
@@ -39,12 +39,12 @@ export function Footer() {
           </form>
           <div className="mt-5 space-y-2 text-sm text-background/70">
             <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 99300 00944</div>
-            <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@shubhanjali.com</div>
+            <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@gajanangems.com</div>
           </div>
         </div>
       </div>
       <div className="border-t border-background/10 py-4 text-center text-xs text-background/50">
-        © {new Date().getFullYear()} Shubhanjali. All rights reserved.
+        © {new Date().getFullYear()} GajananGems. All rights reserved.
       </div>
     </footer>
   );

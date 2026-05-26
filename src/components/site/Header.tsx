@@ -25,7 +25,7 @@ export function Header() {
         </button>
         <Link to="/" className="flex items-center">
           <span className="text-3xl font-display font-semibold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            shubh<span className="text-primary">anjali</span>
+            Gajanan<span className="text-primary">gems</span>
           </span>
         </Link>
         <nav className="hidden lg:flex items-center gap-6 ml-8 text-sm font-medium uppercase tracking-wide">

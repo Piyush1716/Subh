@@ -10,7 +10,7 @@ export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => {
     return {
       meta: [
-        { title: `Product — Shubhanjali` },
+        { title: `Product — GajananGems` },
         { name: "description", content: "Authentic healing crystals and gemstone jewellery." },
       ],
     };
