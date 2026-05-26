@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { fetchProducts, type Product } from "./products";
 
 export type CartItem = { slug: string; qty: number; size?: string };
@@ -56,6 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { slug, qty, size }];
     });
+    const p = productCache.find((x) => x.slug === slug);
+    toast.success(p ? `${p.name} added to cart` : "Item added to cart");
   };
 
   const remove: CartCtx["remove"] = (slug, size) =>

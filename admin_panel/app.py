@@ -77,7 +77,7 @@ def add_category():
 @app.route('/add-product', methods=['POST'])
 def add_product():
     try:
-        # Bulk insert via JSON: [{title, slug, description, price, discont_price, category_id, image_url}, ...]
+        # Bulk insert via JSON: [{title, slug, description, price, old_price, category_id, image_url}, ...]
         if request.is_json:
             products = request.get_json()
             if not isinstance(products, list):
@@ -92,7 +92,7 @@ def add_product():
             "slug": request.form.get('slug'),
             "description": request.form.get('description'),
             "price": request.form.get('price'),
-            "discont_price": request.form.get('discont_price'),
+            "old_price": request.form.get('old_price'),
             "image_url": upload_image(PRODUCT_BUCKET, image),
             "category_id": request.form.get('category_id') or None
         }).execute()

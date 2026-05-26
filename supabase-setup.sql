@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS products (
   title         TEXT        NOT NULL,
   description   TEXT,
   price         NUMERIC     NOT NULL,
-  discont_price NUMERIC,                          -- original/strikethrough price
+  old_price NUMERIC,                          -- original/strikethrough price
   image_url     TEXT        NOT NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -24,7 +24,7 @@ CREATE POLICY "Public read access"
 -- 4. Seed with sample data
 --    Replace image_url values with your actual hosted image URLs.
 --    You can upload images to Supabase Storage and paste the public URLs here.
-INSERT INTO products (title, description, price, discont_price, image_url) VALUES
+INSERT INTO products (title, description, price, old_price, image_url) VALUES
 (
   'Pyrite Round Beads Bracelet',
   'The Pyrite Round Beads Bracelet is a symbol of wealth, confidence, and powerful protection. Known as Fool''s Gold, pyrite radiates golden energy that attracts prosperity, shields against negative influences, and supports manifestation of success.',

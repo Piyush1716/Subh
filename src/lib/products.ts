@@ -27,7 +27,7 @@ export const categoryImageUrl = (path: string | null | undefined) => storageUrl(
 
 /**
  * Raw row shape from the `products` Supabase table.
- * Columns: id, title, description, price, discont_price, image_url,
+ * Columns: id, title, description, price, old_price, image_url,
  *          created_at, category_id
  */
 export type ProductRow = {
@@ -35,7 +35,7 @@ export type ProductRow = {
   title: string;
   description: string | null;
   price: number;
-  discont_price: number | null;
+  old_price: number | null;
   image_url: string | null;        // filename / path in the `products` bucket
   created_at: string;
   category_id: number | null;
@@ -64,7 +64,7 @@ export type Product = ProductRow & {
   slug: string;           // derived from title via titleToSlug()
   name: string;           // alias for title
   img: string;            // full public URL for the product image
-  old?: number;           // alias for discont_price (shown as strikethrough)
+  old?: number;           // alias for old_price (shown as strikethrough)
   shortDescription?: string; // alias for description
 
   // Optional extras (not in DB — populated from joined category or left undefined)
@@ -113,7 +113,7 @@ function normaliseProduct(row: ProductRow): Product {
     name:             title,
     slug:             titleToSlug(title),
     img:              productImageUrl(row.image_url),
-    old:              row.discont_price ?? undefined,
+    old:              row.old_price ?? undefined,
     shortDescription: row.description  ?? undefined,
     categorySlug:     joined?.slug     ?? undefined,
     categoryName:     joined?.name     ?? undefined,

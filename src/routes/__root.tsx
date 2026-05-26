@@ -11,6 +11,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { CartProvider } from "@/lib/cart";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -115,7 +116,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <CartProvider>
         <Outlet />
-        <AiChat /> 
+        <AiChat />
+        <Toaster position="bottom-left" richColors />
       </CartProvider>
     </QueryClientProvider>
   );

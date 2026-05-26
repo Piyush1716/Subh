@@ -121,7 +121,7 @@ The website will reflect your changes immediately on the next page load.
 | `title` | text | ✅ | Becomes the product name and URL slug |
 | `description` | text | — | Shown in the Description tab |
 | `price` | numeric | ✅ | Selling price in ₹ |
-| `discont_price` | numeric | — | Original/strikethrough price (leave empty if no discount) |
+| `old_price` | numeric | — | Original/strikethrough price (leave empty if no discount) |
 | `image_url` | text | ✅ | Must be a publicly accessible URL |
 | `created_at` | timestamptz | auto | Set automatically |
 
