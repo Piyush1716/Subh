@@ -7,8 +7,9 @@ const nav = [
   { label: "Shop", to: "/" },
   { label: "By Category", to: "/" },
   { label: "Home Decor", to: "/" },
-  { label: "Gifting", to: "/" },
-  { label: "Exclusive", to: "/" },
+  { label: "Palm Analysis", to: "/hand-analysis" },
+  // { label: "Gifting", to: "/" },
+  // { label: "Exclusive", to: "/" },
 ];
 
 export function Header() {

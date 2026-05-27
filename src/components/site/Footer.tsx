@@ -38,7 +38,7 @@ export function Footer() {
             <button className="bg-primary px-4 rounded-r-full text-sm font-medium">Join</button>
           </form>
           <div className="mt-5 space-y-2 text-sm text-background/70">
-            <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 99300 00944</div>
+            <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 63515 63768</div>
             <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@gajanangems.com</div>
           </div>
         </div>
