@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { fetchProducts, type Product } from "./products";
-import { supabase } from "./supabase";
 
 export type CartItem = { slug: string; qty: number; size?: string };
 
@@ -17,104 +16,33 @@ type CartCtx = {
 };
 
 const Ctx = createContext<CartCtx | null>(null);
-
-const LS_CART_KEY    = "shubh_cart_v1";
-const LS_SESSION_KEY = "shubh_cart_session_v1";
+const KEY = "shubh_cart_v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems]               = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>([]);
   const [productCache, setProductCache] = useState<Product[]>([]);
-  const [cartSessionId, setCartSessionId] = useState<string | null>(null);
-  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── 1. Hydrate items from localStorage (fast, synchronous path) ────────────
+  // Hydrate cart from localStorage on mount
   useEffect(() => {
     try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(LS_CART_KEY) : null;
+      const raw = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
       if (raw) setItems(JSON.parse(raw));
     } catch {}
   }, []);
 
-  // ── 2. Init / restore cart session from Supabase ───────────────────────────
-  useEffect(() => {
-    async function initSession() {
-      if (typeof window === "undefined") return;
-      let sid = localStorage.getItem(LS_SESSION_KEY);
-
-      if (!sid) {
-        // Create a new cart row in DB; the UUID becomes the session token
-        try {
-          const { data, error } = await supabase
-            .from("carts")
-            .insert({})
-            .select("id")
-            .single();
-          if (!error && data) {
-            sid = data.id as string;
-            localStorage.setItem(LS_SESSION_KEY, sid);
-          }
-        } catch (e) {
-          console.error("CartProvider: failed to create cart session", e);
-        }
-      }
-
-      if (sid) setCartSessionId(sid);
-    }
-
-    initSession();
-  }, []);
-
-  // ── 3. Persist items to localStorage ──────────────────────────────────────
+  // Persist cart to localStorage whenever it changes
   useEffect(() => {
     try {
-      if (typeof window !== "undefined") localStorage.setItem(LS_CART_KEY, JSON.stringify(items));
+      if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(items));
     } catch {}
   }, [items]);
 
-  // ── 4. Sync items to Supabase (debounced 800 ms) ──────────────────────────
-  //    Strategy: replace-all (delete existing rows, then insert current state).
-  //    This keeps the logic simple and avoids per-item upsert complexity.
-  useEffect(() => {
-    if (!cartSessionId) return; // wait until session is ready
-
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-
-    syncTimer.current = setTimeout(async () => {
-      try {
-        // Always delete first so an empty cart clears the DB rows too
-        await supabase.from("cart_items").delete().eq("cart_id", cartSessionId);
-
-        if (items.length > 0) {
-          await supabase.from("cart_items").insert(
-            items.map((item) => ({
-              cart_id: cartSessionId,
-              slug:    item.slug,
-              qty:     item.qty,
-              size:    item.size ?? null,
-            })),
-          );
-        }
-
-        // Bump updated_at on the cart row
-        await supabase.from("carts").update({ updated_at: new Date().toISOString() }).eq("id", cartSessionId);
-      } catch (e) {
-        console.error("CartProvider: failed to sync cart to DB", e);
-      }
-    }, 800);
-
-    return () => {
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-    };
-  }, [items, cartSessionId]);
-
-  // ── 5. Pre-fetch all products so slugs can be resolved ────────────────────
+  // Pre-fetch all products once so cart can resolve slugs → product details
   useEffect(() => {
     fetchProducts()
       .then(setProductCache)
       .catch((e) => console.error("CartProvider: failed to fetch products", e));
   }, []);
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   const getProduct = (slug: string): Product | undefined =>
     productCache.find((p) => p.slug === slug);
@@ -143,7 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = () => setItems([]);
 
-  const count    = items.reduce((s, i) => s + i.qty, 0);
+  const count = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => {
     const p = getProduct(i.slug);
     return s + (p?.price ?? 0) * i.qty;
@@ -162,7 +90,10 @@ export function useCart() {
   return c;
 }
 
-/** Helper: resolve a CartItem → Product from an external product list */
+/**
+ * Helper used by cart/checkout pages to resolve a CartItem → Product.
+ * Reads from the cart context's in-memory product cache (backed by Supabase).
+ */
 export function getProductForItem(item: CartItem, products: Product[]): Product | undefined {
   return products.find((p) => p.slug === item.slug);
 }

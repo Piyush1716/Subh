@@ -16,7 +16,7 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type BillingFormData = {
   firstName: string;
@@ -68,7 +68,7 @@ function CheckoutPage() {
         .insert({
           first_name:     billing.firstName,
           last_name:      billing.lastName,
-          email:          billing.email.trim().toLowerCase(),
+          email:          billing.email,
           phone:          billing.phone,
           address:        billing.address,
           city:           billing.city,
@@ -90,19 +90,20 @@ function CheckoutPage() {
       const orderId = orderData.id as number;
 
       // ── 3. Insert order_items ──────────────────────────────────────────────
-      //    Snapshot title, price, and image so the Orders page can display
-      //    items even if the product is later edited or deleted.
       const lineItems = items.map((item) => {
         const product = getProduct(item.slug);
         return {
-          order_id:   orderId,
-          product_id: product?.id   ?? null,  // numeric FK — null-safe
+          order_id:  orderId,
+          // product_id is optional — link if we can resolve it from the cache
+          // (products table uses int8 id; our cache exposes slug-based Product objects)
+          // To link properly you'd need to expose the numeric DB id on Product;
+          // leave null for now so the FK is still safe.
+          product_id: null,
           slug:       item.slug,
-          title:      product?.name  ?? item.slug,
+          title:      product?.name ?? item.slug,
           price:      product?.price ?? 0,
           qty:        item.qty,
           size:       item.size ?? null,
-          image_url:  product?.img  ?? null,  // full public URL snapshot
         };
       });
 
@@ -114,7 +115,7 @@ function CheckoutPage() {
 
       // ── 4. Success ─────────────────────────────────────────────────────────
       toast.success("Order placed! We'll confirm it shortly.");
-      clear(); // also clears the DB cart via the sync effect in CartProvider
+      clear();
       navigate({ to: "/" });
     } catch (err) {
       console.error("Order placement failed:", err);
@@ -139,7 +140,10 @@ function CheckoutPage() {
         {items.length === 0 ? (
           <div className="text-center py-16 border border-border rounded-xl bg-card">
             <p className="mb-4">Your cart is empty.</p>
-            <Link to="/" className="inline-flex bg-primary text-primary-foreground rounded-full px-6 py-3 text-sm">
+            <Link
+              to="/"
+              className="inline-flex bg-primary text-primary-foreground rounded-full px-6 py-3 text-sm"
+            >
               Shop now
             </Link>
           </div>
@@ -176,9 +180,9 @@ function CheckoutPage() {
                 <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
                 <div className="space-y-3">
                   {[
-                    { id: "cod",  label: "Cash on Delivery",    desc: "Pay with cash upon delivery." },
-                    { id: "upi",  label: "UPI / Net Banking",   desc: "Pay securely via UPI or Net Banking." },
-                    { id: "card", label: "Credit / Debit Card", desc: "Visa, Mastercard, Rupay." },
+                    { id: "cod",  label: "Cash on Delivery",     desc: "Pay with cash upon delivery." },
+                    { id: "upi",  label: "UPI / Net Banking",    desc: "Pay securely via UPI or Net Banking." },
+                    { id: "card", label: "Credit / Debit Card",  desc: "Visa, Mastercard, Rupay." },
                   ].map((m) => (
                     <label
                       key={m.id}
@@ -227,13 +231,17 @@ function CheckoutPage() {
               </div>
 
               <div className="border-t border-border pt-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
+                </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-base pt-2 border-t border-border">
-                  <span>Total</span><span>₹{total.toLocaleString()}</span>
+                  <span>Total</span>
+                  <span>₹{total.toLocaleString()}</span>
                 </div>
               </div>
 
