@@ -637,7 +637,7 @@ function HandAnalysisPage() {
                             className={`w-full flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-wider font-medium rounded-full py-2 transition-all ${
                               addedSlugs.has(p.slug)
                                 ? "bg-primary text-primary-foreground"
-                                : "border border-foreground/80 hover:bg-foreground hover:text-background"
+                                : "border border-primary text-primary hover:bg-primary hover:text-white"
                             }`}
                           >
                             <ShoppingBag className="h-3 w-3" />

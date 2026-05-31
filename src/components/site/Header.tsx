@@ -17,7 +17,7 @@ export function Header() {
   const { count } = useCart();
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-      <div className="bg-primary text-primary-foreground text-center text-xs sm:text-sm py-2 px-4">
+      <div className="text-center text-xs sm:text-sm py-2 px-4" style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}>
         Free Shipping on Purchase of over ₹2000 (Prepaid Orders)
       </div>
       <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center gap-4 h-20">
@@ -38,7 +38,7 @@ export function Header() {
           <span className="text-xs font-bold text-primary animate-pulse">LIVE</span>
         </nav>
         <div className="ml-auto flex items-center gap-2 sm:gap-4">
-          <div className="hidden md:flex items-center bg-secondary rounded-full px-4 py-2 w-64">
+          <div className="hidden md:flex items-center bg-secondary rounded-full px-4 py-2 w-64 border border-border">
             <input className="bg-transparent outline-none flex-1 text-sm" placeholder="Search crystals, bracelets..." />
             <Search className="h-4 w-4 text-muted-foreground" />
           </div>
@@ -47,7 +47,7 @@ export function Header() {
           <button className="p-2"><User className="h-5 w-5" /></button>
           <Link to="/cart" className="relative p-2">
             <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 flex items-center justify-center">{count}</span>
+            <span className="absolute -top-0.5 -right-0.5 text-[10px] rounded-full h-4 w-4 flex items-center justify-center" style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}>{count}</span>
           </Link>
         </div>
       </div>

@@ -161,7 +161,7 @@ function ProductPage() {
               </div>
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-foreground text-background rounded-full py-3 font-medium hover:bg-primary transition-colors"
+                className="flex-1 rounded-full py-3 font-medium transition-colors border border-primary text-primary hover:bg-primary hover:text-white"
               >
                 Add to Cart
               </button>

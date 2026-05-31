@@ -68,12 +68,12 @@ export function FeaturedProducts() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     {p.tag && (
-                      <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 rounded-full">
+                      <span className="absolute top-2 left-2 sm:top-3 sm:left-3 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full" style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}>
                         {p.tag}
                       </span>
                     )}
                     {p.old && (
-                      <span className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-foreground text-background text-[10px] uppercase tracking-wider px-2 py-1 rounded-full">
+                      <span className="absolute top-2 right-2 sm:top-3 sm:right-3 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full font-semibold" style={{ backgroundColor: "#C8A96B", color: "#2E2B26" }}>
                         {Math.round(((p.old - p.price) / p.old) * 100)}% OFF
                       </span>
                     )}
@@ -89,7 +89,7 @@ export function FeaturedProducts() {
                 <div className="px-3 sm:px-4 pb-3 sm:pb-4">
                   <button
                     onClick={() => add(p.slug, 1)}
-                    className="w-full flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-wider font-medium border border-foreground/80 rounded-full py-2 hover:bg-foreground hover:text-background transition-colors"
+                    className="w-full flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-wider font-medium rounded-full py-2 transition-colors border border-primary text-primary hover:bg-primary hover:text-white"
                   >
                     <ShoppingBag className="h-3 w-3" />
                     Add to Cart

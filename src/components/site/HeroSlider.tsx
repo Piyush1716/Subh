@@ -18,7 +18,7 @@ export function HeroSlider() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-peach">
+    <section className="relative w-full overflow-hidden" style={{ backgroundColor: "#EFE8DC" }}>
       <div className="relative h-[420px] sm:h-[520px] md:h-[600px]">
         {slides.map((s, idx) => (
           <div
@@ -33,12 +33,17 @@ export function HeroSlider() {
               className="absolute inset-0 w-full h-full object-cover"
               loading={idx === 0 ? "eager" : "lazy"}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent md:via-transparent" />
+            <div className="absolute inset-0 md:via-transparent" style={{ background: "linear-gradient(to right, rgba(247,244,238,0.45) 0%, transparent 60%)" }} />
             <div className="relative max-w-7xl mx-auto h-full px-6 lg:px-12 flex items-center justify-end">
               <div className="max-w-md text-right md:text-left">
-                <h1 className="text-5xl md:text-7xl font-semibold text-foreground mb-4">{s.title}</h1>
-                <p className="text-lg md:text-xl text-foreground/80 mb-6">{s.subtitle}</p>
-                <button className="bg-foreground text-background px-7 py-3 rounded-full font-medium hover:bg-primary transition-colors">
+                <h1 className="text-5xl md:text-7xl font-semibold mb-4" style={{ color: "#2E2B26" }}>{s.title}</h1>
+                <p className="text-lg md:text-xl mb-6" style={{ color: "rgba(46,43,38,0.80)" }}>{s.subtitle}</p>
+                <button
+                  className="px-7 py-3 rounded-full font-medium transition-colors"
+                  style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}
+                  onMouseOver={e => (e.currentTarget.style.backgroundColor = "#56785D")}
+                  onMouseOut={e => (e.currentTarget.style.backgroundColor = "#3F5C45")}
+                >
                   {s.cta} →
                 </button>
               </div>
@@ -49,17 +54,23 @@ export function HeroSlider() {
 
       <button
         onClick={() => setI((i - 1 + slides.length) % slides.length)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background rounded-full p-2 shadow-md"
+        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-2 shadow-md transition-colors"
+        style={{ backgroundColor: "rgba(247,244,238,0.80)" }}
+        onMouseOver={e => (e.currentTarget.style.backgroundColor = "#F7F4EE")}
+        onMouseOut={e => (e.currentTarget.style.backgroundColor = "rgba(247,244,238,0.80)")}
         aria-label="Previous"
       >
-        <ChevronLeft className="h-6 w-6" />
+        <ChevronLeft className="h-6 w-6" style={{ color: "#2E2B26" }} />
       </button>
       <button
         onClick={() => setI((i + 1) % slides.length)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background rounded-full p-2 shadow-md"
+        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 shadow-md transition-colors"
+        style={{ backgroundColor: "rgba(247,244,238,0.80)" }}
+        onMouseOver={e => (e.currentTarget.style.backgroundColor = "#F7F4EE")}
+        onMouseOut={e => (e.currentTarget.style.backgroundColor = "rgba(247,244,238,0.80)")}
         aria-label="Next"
       >
-        <ChevronRight className="h-6 w-6" />
+        <ChevronRight className="h-6 w-6" style={{ color: "#2E2B26" }} />
       </button>
 
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
@@ -67,7 +78,11 @@ export function HeroSlider() {
           <button
             key={idx}
             onClick={() => setI(idx)}
-            className={`h-2 rounded-full transition-all ${i === idx ? "w-8 bg-foreground" : "w-2 bg-foreground/40"}`}
+            className="h-2 rounded-full transition-all"
+            style={{
+              width: i === idx ? "2rem" : "0.5rem",
+              backgroundColor: i === idx ? "#3F5C45" : "rgba(46,43,38,0.35)",
+            }}
             aria-label={`Slide ${idx + 1}`}
           />
         ))}
