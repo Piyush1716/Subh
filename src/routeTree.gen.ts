@@ -12,9 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as HandAnalysisRouteImport } from './routes/hand-analysis'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 
 const HandAnalysisRoute = HandAnalysisRouteImport.update({
   id: '/hand-analysis',
@@ -29,6 +33,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -46,31 +55,58 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/account': typeof AccountRoute
   '/hand-analysis': typeof HandAnalysisRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/account': typeof AccountRoute
   '/hand-analysis': typeof HandAnalysisRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/account': typeof AccountRoute
   '/hand-analysis': typeof HandAnalysisRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,34 +114,50 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/checkout'
+    | '/account'
     | '/hand-analysis'
     | '/category/$slug'
     | '/product/$slug'
+    | '/auth/register'
+    | '/auth/login'
+    | '/auth/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cart'
     | '/checkout'
+    | '/account'
     | '/hand-analysis'
     | '/category/$slug'
     | '/product/$slug'
+    | '/auth/register'
+    | '/auth/login'
+    | '/auth/verify'
   id:
     | '__root__'
     | '/'
     | '/cart'
     | '/checkout'
+    | '/account'
     | '/hand-analysis'
     | '/category/$slug'
     | '/product/$slug'
+    | '/auth/register'
+    | '/auth/login'
+    | '/auth/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  AccountRoute: typeof AccountRoute
   HandAnalysisRoute: typeof HandAnalysisRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -131,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -152,6 +211,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -159,9 +239,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  AccountRoute: AccountRoute,
   HandAnalysisRoute: HandAnalysisRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductSlugRoute: ProductSlugRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
