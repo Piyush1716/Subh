@@ -1,22 +1,14 @@
 import { supabase } from "@/lib/supabase";
 
 // ─── Storage URL helpers ───────────────────────────────────────────────────────
-// Images are stored in Supabase Storage.
-// Bucket names come from env vars; fall back to the names you configured.
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string).replace(/\/$/, "");
 const PRODUCT_BUCKET  = (import.meta.env.VITE_PRODUCT_BUCKET  as string | undefined) ?? "products";
 const CATEGORY_BUCKET = (import.meta.env.VITE_CATEGORY_BUCKET as string | undefined) ?? "categories";
 
-/**
- * Build the public URL for a file in a Supabase Storage bucket.
- * `filePath` is whatever value is stored in the DB column (e.g. "pyrite.jpg"
- * or "bracelets/pyrite.jpg").  If the DB already stores a full https:// URL
- * (old data), it is returned as-is.
- */
 export function storageUrl(bucket: string, filePath: string | null | undefined): string {
   if (!filePath) return "";
-  if (filePath.startsWith("http")) return filePath; // already absolute
+  if (filePath.startsWith("http")) return filePath;
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filePath}`;
 }
 
@@ -25,77 +17,69 @@ export const categoryImageUrl = (path: string | null | undefined) => storageUrl(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/**
- * Raw row shape from the `products` Supabase table.
- * Columns: id, title, description, price, old_price, image_url,
- *          created_at, category_id
- */
 export type ProductRow = {
   id: number;
   title: string;
   description: string | null;
   price: number;
   old_price: number | null;
-  image_url: string | null;        // filename / path in the `products` bucket
+  image_url: string | null;
   created_at: string;
   category_id: number | null;
   available: boolean;
-  // joined via select("*, categories(*)") — optional
   categories?: CategoryRow | null;
+  // joined from product_images table
+  product_images?: ProductImageRow[];
 };
 
 /**
- * Raw row shape from the `categories` Supabase table.
- * Columns: id, name, slug, image_url, created_at
+ * Row from the `product_images` table.
+ * Each row is one additional image for a product.
  */
+export type ProductImageRow = {
+  id: number;
+  product_id: number;
+  image_url: string;   // filename / path in the `products` bucket (same bucket as main image)
+  sort_order: number;  // lower = shown first
+};
+
 export type CategoryRow = {
   id: number;
   name: string;
   slug: string;
-  image_url: string | null;        // filename / path in the `categories` bucket
+  image_url: string | null;
   created_at: string;
 };
 
-/**
- * Enriched product shape used throughout the UI.
- * All fields from ProductRow are present, plus UI-friendly aliases.
- */
 export type Product = ProductRow & {
-  // UI aliases
-  slug: string;           // derived from title via titleToSlug()
-  name: string;           // alias for title
-  img: string;            // full public URL for the product image
-  old?: number;           // alias for old_price (shown as strikethrough)
-  shortDescription?: string; // alias for description
+  slug: string;
+  name: string;
+  img: string;           // full public URL for the primary product image
+  old?: number;
+  shortDescription?: string;
 
-  // Optional extras (not in DB — populated from joined category or left undefined)
   categorySlug?: string;
   categoryName?: string;
 
-  // These can be stored as JSONB columns or left undefined
   tag?: string;
   rating?: number;
   reviews?: number;
   stone?: string;
   benefits?: string[];
   sizes?: string[];
-  gallery?: string[];     // additional image paths in the products bucket
+  gallery: string[];     // ALL images: primary first, then additional images in sort_order
 };
 
-/**
- * Category shape used throughout the UI.
- */
 export type Category = {
   id: number;
   slug: string;
   name: string;
-  img: string;            // full public URL for the category image
-  description?: string;   // not in DB — you can add a `description` column later
+  img: string;
+  description?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** "Pyrite Round Beads Bracelet" → "pyrite-round-beads-bracelet" */
 export function titleToSlug(title: string): string {
   return title
     .toLowerCase()
@@ -104,37 +88,50 @@ export function titleToSlug(title: string): string {
     .replace(/\s+/g, "-");
 }
 
-/** Convert a raw ProductRow (+ optional joined category) into a Product */
 function normaliseProduct(row: ProductRow): Product {
   const title  = row.title as string;
   const joined = row.categories as CategoryRow | null | undefined;
+
+  // Build primary image URL
+  const primaryImg = productImageUrl(row.image_url);
+
+  // Build gallery: primary image + additional images sorted by sort_order
+  const extraImages: string[] = (row.product_images ?? [])
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((pi) => productImageUrl(pi.image_url))
+    .filter(Boolean);
+
+  // Deduplicate: if extra images happen to include the same URL as primary, skip
+  const gallery: string[] = [
+    ...(primaryImg ? [primaryImg] : []),
+    ...extraImages.filter((url) => url !== primaryImg),
+  ];
 
   return {
     ...row,
     name:             title,
     slug:             titleToSlug(title),
-    img:              productImageUrl(row.image_url),
+    img:              primaryImg,
     old:              row.old_price ?? undefined,
     shortDescription: row.description  ?? undefined,
     categorySlug:     joined?.slug     ?? undefined,
     categoryName:     joined?.name     ?? undefined,
+    gallery,
   };
 }
 
-/** Convert a raw CategoryRow into a Category */
 function normaliseCategory(row: CategoryRow): Category {
   return {
     id:          row.id,
     slug:        row.slug,
     name:        row.name,
     img:         categoryImageUrl(row.image_url),
-    description: undefined, // add a `description` column to the DB to populate this
+    description: undefined,
   };
 }
 
 // ─── Category fetching ────────────────────────────────────────────────────────
 
-/** Fetch all categories ordered by name */
 export async function fetchCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from("categories")
@@ -145,7 +142,6 @@ export async function fetchCategories(): Promise<Category[]> {
   return (data ?? []).map(normaliseCategory);
 }
 
-/** Fetch a single category by slug */
 export async function fetchCategoryBySlug(slug: string): Promise<Category | null> {
   const { data, error } = await supabase
     .from("categories")
@@ -159,14 +155,10 @@ export async function fetchCategoryBySlug(slug: string): Promise<Category | null
 
 // ─── Product fetching ─────────────────────────────────────────────────────────
 
-/**
- * Fetch all products, joining category data so we get the category slug.
- * The join uses the `category_id` FK on the products table.
- */
 export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("*, categories(*)")
+    .select("*, categories(*), product_images(*)")
     .eq("available", true)
     .order("created_at", { ascending: false });
 
@@ -174,19 +166,15 @@ export async function fetchProducts(): Promise<Product[]> {
   return (data ?? []).map(normaliseProduct);
 }
 
-/** Fetch a single product by its slug (derived from title) */
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  // We can't query by slug directly (no slug column), so fetch all & filter.
-  // For large catalogs, add a generated `slug` column in Supabase instead.
   const all = await fetchProducts();
   return all.find((p) => p.slug === slug) ?? null;
 }
 
-/** Fetch a single product by its numeric id */
 export async function fetchProductById(id: number): Promise<Product | null> {
   const { data, error } = await supabase
     .from("products")
-    .select("*, categories(*)")
+    .select("*, categories(*), product_images(*)")
     .eq("id", id)
     .eq("available", true)
     .single();
@@ -195,12 +183,7 @@ export async function fetchProductById(id: number): Promise<Product | null> {
   return normaliseProduct(data);
 }
 
-/**
- * Fetch all products for a given category slug.
- * Joins through the `category_id` FK → categories.slug.
- */
 export async function fetchProductsByCategory(categorySlug: string): Promise<Product[]> {
-  // First resolve slug → id
   const { data: catData, error: catError } = await supabase
     .from("categories")
     .select("id")
@@ -211,7 +194,7 @@ export async function fetchProductsByCategory(categorySlug: string): Promise<Pro
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, categories(*)")
+    .select("*, categories(*), product_images(*)")
     .eq("category_id", catData.id)
     .eq("available", true)
     .order("created_at", { ascending: false });

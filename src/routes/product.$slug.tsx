@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Star, Heart, Minus, Plus, Truck, ShieldCheck, Sparkles, ChevronRight } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Star, Heart, Minus, Plus, Truck, ShieldCheck, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { fetchProductBySlug, fetchProducts, type Product } from "@/lib/products";
@@ -42,10 +42,119 @@ export const Route = createFileRoute("/product/$slug")({
   component: ProductPage,
 });
 
+// ─── Mobile swipe-aware image carousel ───────────────────────────────────────
+
+function ProductGallery({ gallery, productName, hasDiscount }: {
+  gallery: string[];
+  productName: string;
+  hasDiscount: boolean;
+}) {
+  const [active, setActive] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const prev = useCallback(() => setActive((i) => (i - 1 + gallery.length) % gallery.length), [gallery.length]);
+  const next = useCallback(() => setActive((i) => (i + 1) % gallery.length), [gallery.length]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const delta = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(delta) > 40) {
+      delta > 0 ? next() : prev();
+    }
+    setTouchStart(null);
+  };
+
+  // Single image — no carousel chrome needed
+  if (gallery.length === 1) {
+    return (
+      <div className="relative aspect-square rounded-2xl overflow-hidden bg-secondary">
+        <img src={gallery[0]} alt={productName} className="w-full h-full object-cover" />
+        {hasDiscount && (
+          <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs uppercase tracking-wider px-3 py-1 rounded-full">
+            Sale
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Main image with swipe + arrow nav */}
+      <div
+        className="relative aspect-square rounded-2xl overflow-hidden bg-secondary"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img
+          src={gallery[active]}
+          alt={`${productName} — image ${active + 1}`}
+          className="w-full h-full object-cover transition-opacity duration-200"
+        />
+
+        {hasDiscount && (
+          <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs uppercase tracking-wider px-3 py-1 rounded-full">
+            Sale
+          </span>
+        )}
+
+        {/* Prev / Next arrows — visible on md+ screens, also on mobile */}
+        <button
+          onClick={prev}
+          aria-label="Previous image"
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow hover:bg-background transition"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          onClick={next}
+          aria-label="Next image"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow hover:bg-background transition"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+
+        {/* Dot indicators — nice on mobile */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {gallery.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              aria-label={`Go to image ${i + 1}`}
+              className={`w-2 h-2 rounded-full transition-all ${
+                i === active ? "bg-primary scale-125" : "bg-background/60"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Thumbnail strip — scrollable horizontally on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap">
+        {gallery.map((g, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition ${
+              active === i ? "border-primary" : "border-border hover:border-primary/50"
+            }`}
+          >
+            <img src={g} alt="" className="w-full h-full object-cover" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page component ───────────────────────────────────────────────────────────
+
 function ProductPage() {
   const { product, related } = Route.useLoaderData() as { product: Product; related: Product[] };
-  const gallery = product.gallery?.length ? product.gallery : [product.img];
-  const [active, setActive] = useState(0);
   const [size, setSize] = useState<string | undefined>(product.sizes?.[2]);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "info" | "reviews">("desc");
@@ -72,27 +181,11 @@ function ProductPage() {
 
         <section className="max-w-7xl mx-auto px-4 lg:px-6 py-6 sm:py-10 grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Gallery */}
-          <div className="flex flex-col-reverse sm:flex-row gap-3">
-            <div className="flex sm:flex-col gap-2 sm:gap-3 overflow-auto sm:max-h-[560px]">
-              {gallery.map((g, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActive(i)}
-                  className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition ${active === i ? "border-primary" : "border-border"}`}
-                >
-                  <img src={g} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-            <div className="relative flex-1 aspect-square rounded-2xl overflow-hidden bg-secondary">
-              <img src={gallery[active]} alt={product.name} className="w-full h-full object-cover" />
-              {product.old && (
-                <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs uppercase tracking-wider px-3 py-1 rounded-full">
-                  Sale
-                </span>
-              )}
-            </div>
-          </div>
+          <ProductGallery
+            gallery={product.gallery}
+            productName={product.name}
+            hasDiscount={!!product.old}
+          />
 
           {/* Info */}
           <div>
@@ -197,7 +290,7 @@ function ProductPage() {
               </div>
             </div>
 
-            {product.categoryName  && (
+            {product.categoryName && (
               <p className="text-xs text-muted-foreground mt-6">
                 <span className="font-medium text-foreground">Category:</span> {product.categoryName}
                 {product.stone && <> · <span className="font-medium text-foreground">Stone:</span> {product.stone}</>}
