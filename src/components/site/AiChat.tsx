@@ -3,7 +3,11 @@ import { MessageCircle, X, Send, Bot, User, Loader2, Trash2 } from "lucide-react
 
 type Message = { role: "user" | "bot"; text: string };
 const STORAGE_KEY = "shubh_chat_v1";
-const WELCOME: Message = { role: "bot", text: "👋 Hi! I'm GajananGems Assistant. Ask me anything about our crystals, bracelets, or healing gemstones. 💎" };
+const CHAT_API_URL = (import.meta.env.VITE_CHAT_API_URL as string | undefined)?.replace(/\/$/, "");
+const WELCOME: Message = {
+  role: "bot",
+  text: "👋 Hi! I'm GajananGems Assistant. Ask me anything about our crystals, bracelets, or healing gemstones. 💎",
+};
 
 export function AiChat() {
   const [open, setOpen] = useState(false);
@@ -11,16 +15,18 @@ export function AiChat() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [WELCOME];
-    } catch { return [WELCOME]; }
+    } catch {
+      return [WELCOME];
+    }
   });
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const clearChat = () => {
     setMessages([WELCOME]);
     localStorage.removeItem(STORAGE_KEY);
   };
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   // Persist to localStorage
   useEffect(() => {
@@ -38,35 +44,52 @@ export function AiChat() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
-    console.log("[AiChat] Sending message:", text);
-    // alert("[AiChat] Sending message:"+ text );
+
+    if (!CHAT_API_URL) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "⚠️ Chat service is not configured. Please contact us at hello@gajanangems.com." },
+      ]);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch("http://127.0.0.1:8000/chat", {
+      const res = await fetch(`${CHAT_API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
       });
-      console.log(`[AiChat] Response received — status: ${res.status} ${res.statusText}`);
-      
-      // alert(`[AiChat] Response received — status: ${res.status} ${res.statusText}`);
+
       if (!res.ok) {
-        const errorBody = await res.text().catch(() => "(unreadable body)");
-        console.error(`[AiChat] API error: ${res.status} ${res.statusText}`, { url: res.url, reason: errorBody });
-        setMessages((prev) => [...prev, { role: "bot", text: `⚠️ Server error (${res.status}). Please try again.` }]);
+        const errorBody = await res.text().catch(() => "");
+        const detail = (() => {
+          try {
+            return (JSON.parse(errorBody) as { detail?: string }).detail ?? "";
+          } catch {
+            return errorBody;
+          }
+        })();
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: `⚠️ ${detail || `Server error (${res.status}). Please try again.`}` },
+        ]);
         return;
       }
+
       const data = await res.json();
-      console.log("[AiChat] Response data:", data);
-      const botText = data.reply ?? data.response ?? data.message ?? "Sorry, I didn't understand that.";
-      console.log("[AiChat] Bot reply:", botText);
+      const botText = (data as { reply?: string; response?: string; message?: string }).reply
+        ?? data.response
+        ?? data.message
+        ?? "Sorry, I didn't quite understand that. Could you rephrase?";
       setMessages((prev) => [...prev, { role: "bot", text: botText }]);
-    } catch (err) {
-      console.error("[AiChat] Network/fetch error:", err);
-      // alert("[AiChat] Network/fetch error:");
-      setMessages((prev) => [...prev, { role: "bot", text: "⚠️ Could not reach the server. Please try again." }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "⚠️ Could not reach the server. Please check your connection and try again." },
+      ]);
     } finally {
       setLoading(false);
-      console.log("[AiChat] Request complete.");
     }
   };
 
@@ -80,19 +103,30 @@ export function AiChat() {
       >
         <div className="bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[480px]">
           {/* Header */}
-          <div className="px-4 py-3 flex items-center justify-between flex-shrink-0" style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}>
+          <div
+            className="px-4 py-3 flex items-center justify-between flex-shrink-0"
+            style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}
+          >
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               <div>
                 <p className="font-semibold text-sm leading-none">GajananGems Assistant</p>
-                <p className="text-[10px] opacity-80 mt-0.5">Ask about crystals & healing</p>
+                <p className="text-[10px] opacity-80 mt-0.5">Ask about crystals &amp; healing</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={clearChat} title="Clear chat" className="p-1 rounded-full transition-colors hover:bg-white/20">
+              <button
+                onClick={clearChat}
+                title="Clear chat"
+                className="p-1 rounded-full transition-colors hover:bg-white/20"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
-              <button onClick={() => setOpen(false)} className="p-1 rounded-full transition-colors hover:bg-white/20">
+              <button
+                onClick={() => setOpen(false)}
+                className="p-1 rounded-full transition-colors hover:bg-white/20"
+                aria-label="Close chat"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -104,18 +138,20 @@ export function AiChat() {
               <div key={i} className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
                   className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center"
-                  style={m.role === "user"
-                    ? { backgroundColor: "#3F5C45", color: "#FFFFFF" }
-                    : { backgroundColor: "#EFE8DC" }
+                  style={
+                    m.role === "user"
+                      ? { backgroundColor: "#3F5C45", color: "#FFFFFF" }
+                      : { backgroundColor: "#EFE8DC" }
                   }
                 >
                   {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
                 <div
                   className="max-w-[75%] px-3 py-2 rounded-2xl text-sm leading-relaxed"
-                  style={m.role === "user"
-                    ? { backgroundColor: "#3F5C45", color: "#FFFFFF", borderTopRightRadius: "0.25rem" }
-                    : { backgroundColor: "#EFE8DC", color: "#2E2B26", borderTopLeftRadius: "0.25rem" }
+                  style={
+                    m.role === "user"
+                      ? { backgroundColor: "#3F5C45", color: "#FFFFFF", borderTopRightRadius: "0.25rem" }
+                      : { backgroundColor: "#EFE8DC", color: "#2E2B26", borderTopLeftRadius: "0.25rem" }
                   }
                 >
                   {m.text}
@@ -124,7 +160,10 @@ export function AiChat() {
             ))}
             {loading && (
               <div className="flex gap-2">
-                <div className="h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#EFE8DC" }}>
+                <div
+                  className="h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "#EFE8DC" }}
+                >
                   <Bot className="h-4 w-4" />
                 </div>
                 <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: "#EFE8DC" }}>
@@ -148,10 +187,13 @@ export function AiChat() {
             <button
               onClick={send}
               disabled={!input.trim() || loading}
+              aria-label="Send message"
               className="rounded-full p-2.5 transition-colors disabled:opacity-40"
               style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}
-              onMouseOver={e => { if (!loading && input.trim()) e.currentTarget.style.backgroundColor = "#56785D"; }}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = "#3F5C45")}
+              onMouseOver={(e) => {
+                if (!loading && input.trim()) e.currentTarget.style.backgroundColor = "#56785D";
+              }}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3F5C45")}
             >
               <Send className="h-4 w-4" />
             </button>
@@ -165,8 +207,8 @@ export function AiChat() {
         aria-label="Open AI chat"
         className="fixed bottom-6 right-4 sm:right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300"
         style={{ backgroundColor: "#3F5C45", color: "#FFFFFF" }}
-        onMouseOver={e => (e.currentTarget.style.backgroundColor = "#56785D")}
-        onMouseOut={e => (e.currentTarget.style.backgroundColor = "#3F5C45")}
+        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#56785D")}
+        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3F5C45")}
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </button>

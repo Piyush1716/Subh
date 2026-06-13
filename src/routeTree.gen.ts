@@ -9,11 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TermsConditionsRouteImport } from './routes/terms-conditions'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRefundPolicyRouteImport } from './routes/returns-refund-policy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as OrderTrackingRouteImport } from './routes/order-tracking'
+import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
 import { Route as HandAnalysisRouteImport } from './routes/hand-analysis'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CustomizedBraceletRouteImport } from './routes/customized-bracelet'
@@ -26,6 +29,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsConditionsRoute = TermsConditionsRouteImport.update({
   id: '/terms-conditions',
   path: '/terms-conditions',
@@ -34,6 +42,11 @@ const TermsConditionsRoute = TermsConditionsRouteImport.update({
 const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
   id: '/shipping-policy',
   path: '/shipping-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReturnsRefundPolicyRoute = ReturnsRefundPolicyRouteImport.update({
@@ -49,6 +62,11 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
 const OrderTrackingRoute = OrderTrackingRouteImport.update({
   id: '/order-tracking',
   path: '/order-tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
+  id: '/order-confirmation',
+  path: '/order-confirmation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HandAnalysisRoute = HandAnalysisRouteImport.update({
@@ -117,11 +135,14 @@ export interface FileRoutesByFullPath {
   '/customized-bracelet': typeof CustomizedBraceletRoute
   '/faq': typeof FaqRoute
   '/hand-analysis': typeof HandAnalysisRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/order-tracking': typeof OrderTrackingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/returns-refund-policy': typeof ReturnsRefundPolicyRoute
+  '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/terms-conditions': typeof TermsConditionsRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -135,11 +156,14 @@ export interface FileRoutesByTo {
   '/customized-bracelet': typeof CustomizedBraceletRoute
   '/faq': typeof FaqRoute
   '/hand-analysis': typeof HandAnalysisRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/order-tracking': typeof OrderTrackingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/returns-refund-policy': typeof ReturnsRefundPolicyRoute
+  '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/terms-conditions': typeof TermsConditionsRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -154,11 +178,14 @@ export interface FileRoutesById {
   '/customized-bracelet': typeof CustomizedBraceletRoute
   '/faq': typeof FaqRoute
   '/hand-analysis': typeof HandAnalysisRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/order-tracking': typeof OrderTrackingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/returns-refund-policy': typeof ReturnsRefundPolicyRoute
+  '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/terms-conditions': typeof TermsConditionsRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -174,11 +201,14 @@ export interface FileRouteTypes {
     | '/customized-bracelet'
     | '/faq'
     | '/hand-analysis'
+    | '/order-confirmation'
     | '/order-tracking'
     | '/privacy-policy'
     | '/returns-refund-policy'
+    | '/search'
     | '/shipping-policy'
     | '/terms-conditions'
+    | '/wishlist'
     | '/category/$slug'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -192,11 +222,14 @@ export interface FileRouteTypes {
     | '/customized-bracelet'
     | '/faq'
     | '/hand-analysis'
+    | '/order-confirmation'
     | '/order-tracking'
     | '/privacy-policy'
     | '/returns-refund-policy'
+    | '/search'
     | '/shipping-policy'
     | '/terms-conditions'
+    | '/wishlist'
     | '/category/$slug'
     | '/product/$slug'
   id:
@@ -210,11 +243,14 @@ export interface FileRouteTypes {
     | '/customized-bracelet'
     | '/faq'
     | '/hand-analysis'
+    | '/order-confirmation'
     | '/order-tracking'
     | '/privacy-policy'
     | '/returns-refund-policy'
+    | '/search'
     | '/shipping-policy'
     | '/terms-conditions'
+    | '/wishlist'
     | '/category/$slug'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
@@ -229,17 +265,27 @@ export interface RootRouteChildren {
   CustomizedBraceletRoute: typeof CustomizedBraceletRoute
   FaqRoute: typeof FaqRoute
   HandAnalysisRoute: typeof HandAnalysisRoute
+  OrderConfirmationRoute: typeof OrderConfirmationRoute
   OrderTrackingRoute: typeof OrderTrackingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ReturnsRefundPolicyRoute: typeof ReturnsRefundPolicyRoute
+  SearchRoute: typeof SearchRoute
   ShippingPolicyRoute: typeof ShippingPolicyRoute
   TermsConditionsRoute: typeof TermsConditionsRoute
+  WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms-conditions': {
       id: '/terms-conditions'
       path: '/terms-conditions'
@@ -252,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping-policy'
       fullPath: '/shipping-policy'
       preLoaderRoute: typeof ShippingPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/returns-refund-policy': {
@@ -273,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/order-tracking'
       fullPath: '/order-tracking'
       preLoaderRoute: typeof OrderTrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-confirmation': {
+      id: '/order-confirmation'
+      path: '/order-confirmation'
+      fullPath: '/order-confirmation'
+      preLoaderRoute: typeof OrderConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hand-analysis': {
@@ -365,11 +425,14 @@ const rootRouteChildren: RootRouteChildren = {
   CustomizedBraceletRoute: CustomizedBraceletRoute,
   FaqRoute: FaqRoute,
   HandAnalysisRoute: HandAnalysisRoute,
+  OrderConfirmationRoute: OrderConfirmationRoute,
   OrderTrackingRoute: OrderTrackingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ReturnsRefundPolicyRoute: ReturnsRefundPolicyRoute,
+  SearchRoute: SearchRoute,
   ShippingPolicyRoute: ShippingPolicyRoute,
   TermsConditionsRoute: TermsConditionsRoute,
+  WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductSlugRoute: ProductSlugRoute,
 }

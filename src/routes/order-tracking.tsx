@@ -2,6 +2,8 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageBanner } from "@/components/PageBanner";
 import { StaticPageLayout } from "@/components/site/StaticPageLayout";
+import { supabase } from "@/lib/supabase";
+import { Search, Package, CheckCircle2, Clock, Truck, XCircle, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/order-tracking")({
   head: () => ({
@@ -20,62 +22,300 @@ export const Route = createFileRoute("/order-tracking")({
   component: OrderTrackingPage,
 });
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type OrderStatus = "payment_pending" | "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
+
+type OrderItem = {
+  id: number;
+  title: string;
+  qty: number;
+  price: number;
+  size: string | null;
+};
+
+type Order = {
+  id: number;
+  status: OrderStatus;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  payment_method: string;
+  order_items: OrderItem[];
+};
+
+// ─── Status helpers ───────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<
+  OrderStatus,
+  { label: string; color: string; bg: string; icon: React.ElementType; description: string }
+> = {
+  payment_pending: {
+    label: "Payment Pending",
+    color: "text-orange-700",
+    bg: "bg-orange-50 border-orange-200",
+    icon: Clock,
+    description: "Payment is being processed. If you paid, please wait a moment for confirmation.",
+  },
+  pending: {
+    label: "Pending",
+    color: "text-yellow-700",
+    bg: "bg-yellow-50 border-yellow-200",
+    icon: Clock,
+    description: "Your order has been received and is awaiting confirmation.",
+  },
+  confirmed: {
+    label: "Confirmed",
+    color: "text-blue-700",
+    bg: "bg-blue-50 border-blue-200",
+    icon: CheckCircle2,
+    description: "Your order has been confirmed and is being prepared.",
+  },
+  processing: {
+    label: "Processing",
+    color: "text-purple-700",
+    bg: "bg-purple-50 border-purple-200",
+    icon: Package,
+    description: "Your order is being packed and prepared for dispatch.",
+  },
+  shipped: {
+    label: "Shipped",
+    color: "text-indigo-700",
+    bg: "bg-indigo-50 border-indigo-200",
+    icon: Truck,
+    description: "Your order is on its way! Expect delivery within 3-5 business days.",
+  },
+  delivered: {
+    label: "Delivered",
+    color: "text-green-700",
+    bg: "bg-green-50 border-green-200",
+    icon: CheckCircle2,
+    description: "Your order has been delivered. Enjoy your crystals! 💎",
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
+    icon: XCircle,
+    description: "This order has been cancelled. Contact us for assistance.",
+  },
+};
+
+const STATUS_STEPS: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered"];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 function OrderTrackingPage() {
+  const [orderId, setOrderId] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = parseInt(orderId.trim(), 10);
+    if (isNaN(id) || !email.trim()) {
+      setError("Please enter a valid Order ID and email address.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setOrder(null);
+    setSubmitted(true);
+
+    try {
+      const { data, error: dbError } = await supabase
+        .from("orders")
+        .select("id, status, created_at, first_name, last_name, subtotal, shipping, total, payment_method, order_items(id, title, qty, price, size)")
+        .eq("id", id)
+        .eq("email", email.trim().toLowerCase())
+        .single();
+
+      if (dbError || !data) {
+        setError(
+          "We couldn't find an order matching those details. Please double-check your Order ID and email address."
+        );
+        return;
+      }
+
+      setOrder(data as unknown as Order);
+    } catch {
+      setError("Something went wrong. Please try again or contact us at hello@gajanangems.com.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stepIndex = order ? STATUS_STEPS.indexOf(order.status as OrderStatus) : -1;
+  const statusCfg = order ? STATUS_CONFIG[order.status] ?? STATUS_CONFIG["pending"] : null;
 
   return (
     <StaticPageLayout>
       <PageBanner title="Order Tracking" crumb="Order Tracking" />
-      <div className="mx-auto max-w-xl px-4 py-12">
-        <p className="text-center text-muted-foreground">
-          To track your order please enter your Order ID in the box below and press the "Track"
-          button. This was given to you on your receipt and in the confirmation email you should have
-          received.
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <p className="text-center text-muted-foreground mb-8">
+          Enter your Order ID (from your confirmation email) and the billing email to check your order status.
         </p>
+
+        {/* Form */}
         <form
-          className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-          }}
+          onSubmit={handleTrack}
+          className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label htmlFor="orderId" className="mb-1 block text-sm font-medium text-foreground">
+            <label htmlFor="orderId" className="mb-1.5 block text-sm font-medium text-foreground">
               Order ID
             </label>
             <input
               id="orderId"
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
               required
-              placeholder="Found in your order confirmation email"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g. 1042"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
             />
           </div>
           <div>
-            <label htmlFor="billingEmail" className="mb-1 block text-sm font-medium text-foreground">
-              Billing email
+            <label htmlFor="billingEmail" className="mb-1.5 block text-sm font-medium text-foreground">
+              Billing Email
             </label>
             <input
               id="billingEmail"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="Email you used during checkout"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+            disabled={loading}
+            className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            Track
+            {loading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Tracking…</>
+            ) : (
+              <><Search className="h-4 w-4" /> Track Order</>
+            )}
           </button>
         </form>
-        {submitted && (
-          <div className="mt-6 rounded-xl bg-muted p-5 text-center text-sm text-muted-foreground">
-            We couldn't find live tracking details in this demo. For order status, please email{" "}
-            <a href="mailto:hello@gajanangems.com" className="text-primary underline">
-              hello@gajanangems.com
-            </a>{" "}
-            or WhatsApp +91 63515 63768.
+
+        {/* Error */}
+        {error && (
+          <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* Order result */}
+        {order && statusCfg && (
+          <div className="mt-8 space-y-6">
+            {/* Status banner */}
+            <div className={`rounded-2xl border p-5 ${statusCfg.bg}`}>
+              <div className={`flex items-center gap-3 mb-2 ${statusCfg.color}`}>
+                <statusCfg.icon className="h-5 w-5" />
+                <span className="font-semibold text-lg">Order #{order.id} — {statusCfg.label}</span>
+              </div>
+              <p className={`text-sm ${statusCfg.color} opacity-80`}>{statusCfg.description}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Placed on {new Date(order.created_at).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
+
+            {/* Progress tracker */}
+            {order.status !== "cancelled" && (
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-sm font-semibold mb-4">Order Progress</h3>
+                <div className="relative flex items-center justify-between">
+                  {STATUS_STEPS.map((step, i) => {
+                    const cfg = STATUS_CONFIG[step];
+                    const done = stepIndex >= i;
+                    const active = stepIndex === i;
+                    return (
+                      <div key={step} className="flex flex-col items-center flex-1 relative">
+                        {/* Connector line */}
+                        {i < STATUS_STEPS.length - 1 && (
+                          <div
+                            className="absolute top-4 left-1/2 w-full h-0.5 transition-colors"
+                            style={{ backgroundColor: stepIndex > i ? "#3F5C45" : "#e5e7eb" }}
+                          />
+                        )}
+                        {/* Circle */}
+                        <div
+                          className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center border-2 transition-colors ${
+                            done ? "border-primary bg-primary text-white" : "border-border bg-background text-muted-foreground"
+                          } ${active ? "ring-4 ring-primary/20" : ""}`}
+                        >
+                          <cfg.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <p className={`mt-2 text-[10px] text-center leading-tight ${done ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                          {cfg.label}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Order items */}
+            {order.order_items && order.order_items.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="text-sm font-semibold">Items Ordered</h3>
+                </div>
+                <ul className="divide-y divide-border">
+                  {order.order_items.map((item) => (
+                    <li key={item.id} className="flex items-center justify-between px-5 py-3 text-sm">
+                      <div>
+                        <p className="font-medium line-clamp-1">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Qty {item.qty}{item.size ? ` · Size ${item.size}` : ""}
+                        </p>
+                      </div>
+                      <span className="font-medium">₹{(item.price * item.qty).toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="px-5 py-4 border-t border-border space-y-1.5 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span><span>₹{order.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery</span><span className="text-green-600 font-semibold">Free</span>
+                  </div>
+                  <div className="flex justify-between font-semibold pt-2 border-t border-border text-base">
+                    <span>Total</span><span>₹{order.total.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                    <span>Payment</span>
+                    <span>
+                      {order.payment_method === "razorpay" ? "Razorpay (Online)" : order.payment_method}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Help */}
+            <p className="text-center text-xs text-muted-foreground">
+              Need help? Email{" "}
+              <a href="mailto:hello@gajanangems.com" className="text-primary underline">
+                hello@gajanangems.com
+              </a>{" "}
+              or WhatsApp{" "}
+              <a href="https://wa.me/916351563768" className="text-primary underline" target="_blank" rel="noopener noreferrer">
+                +91 63515 63768
+              </a>
+            </p>
           </div>
         )}
       </div>

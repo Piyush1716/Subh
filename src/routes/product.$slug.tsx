@@ -5,13 +5,23 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { fetchProductBySlug, fetchProducts, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
+import { useWishlist } from "@/lib/wishlist";
 
 export const Route = createFileRoute("/product/$slug")({
-  head: ({ params }) => {
+  head: ({ loaderData }) => {
+    const product = loaderData?.product as Product | undefined;
     return {
       meta: [
-        { title: `Product — GajananGems` },
-        { name: "description", content: "Authentic healing crystals and gemstone jewellery." },
+        { title: product ? `${product.name} — GajananGems` : "Product — GajananGems" },
+        {
+          name: "description",
+          content: product?.shortDescription
+            ? product.shortDescription.slice(0, 160)
+            : "Authentic healing crystals and gemstone jewellery from GajananGems.",
+        },
+        { property: "og:title", content: product ? `${product.name} — GajananGems` : "GajananGems" },
+        { property: "og:image", content: product?.img ?? "" },
+        { property: "og:type", content: "product" },
       ],
     };
   },
@@ -159,7 +169,9 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "info" | "reviews">("desc");
   const { add } = useCart();
+  const { toggle: wishlistToggle, has: wishlistHas } = useWishlist();
   const navigate = useNavigate();
+  const isWishlisted = wishlistHas(product.slug);
 
   const handleAddToCart = () => add(product.slug, qty, size);
   const handleBuyNow = () => {
@@ -258,8 +270,13 @@ function ProductPage() {
               >
                 Add to Cart
               </button>
-              <button className="p-3 border border-border rounded-full hover:border-primary" aria-label="Wishlist">
-                <Heart className="h-5 w-5" />
+              <button
+                onClick={() => wishlistToggle(product.slug)}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                className="p-3 border rounded-full transition-colors hover:border-primary"
+                style={isWishlisted ? { borderColor: "#ef4444" } : {}}
+              >
+                <Heart className={`h-5 w-5 transition-colors ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} />
               </button>
             </div>
 
@@ -278,7 +295,7 @@ function ProductPage() {
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
               <div className="p-3 border border-border rounded-lg">
                 <Truck className="h-5 w-5 mx-auto mb-1 text-primary" />
-                Free shipping ₹2000+
+                Free Delivery
               </div>
               <div className="p-3 border border-border rounded-lg">
                 <ShieldCheck className="h-5 w-5 mx-auto mb-1 text-primary" />

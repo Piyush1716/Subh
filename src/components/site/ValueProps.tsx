@@ -1,7 +1,7 @@
 import { Truck, ShieldCheck, Sparkles, HeartHandshake } from "lucide-react";
 
 const items = [
-  { icon: Truck, title: "Free Shipping", desc: "On orders over ₹2000" },
+  { icon: Truck, title: "Free Delivery", desc: "On every order, always" },
   { icon: ShieldCheck, title: "100% Authentic", desc: "Energised & certified crystals" },
   { icon: Sparkles, title: "Cleansed & Charged", desc: "Ready to wear" },
   { icon: HeartHandshake, title: "Expert Guidance", desc: "Find your perfect stone" },

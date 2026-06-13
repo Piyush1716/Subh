@@ -16,8 +16,7 @@ export const Route = createFileRoute("/cart")({
 
 function CartPage() {
   const { items, setQty, remove, subtotal, count, getProduct } = useCart();
-  const shipping = subtotal > 0 && subtotal < 2000 ? 99 : 0;
-  const total = subtotal + shipping;
+  const total = subtotal;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -76,12 +75,9 @@ function CartPage() {
               <h2 className="text-lg font-semibold">Cart Totals</h2>
               <div className="flex justify-between text-sm"><span>Items ({count})</span><span>₹{subtotal.toLocaleString()}</span></div>
               <div className="flex justify-between text-sm">
-                <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+                <span>Delivery</span>
+                <span className="text-green-600 font-semibold">Free 🎉</span>
               </div>
-              {subtotal < 2000 && subtotal > 0 && (
-                <p className="text-xs text-muted-foreground">Add ₹{(2000 - subtotal).toLocaleString()} more for free shipping.</p>
-              )}
               <div className="border-t border-border pt-4 flex justify-between font-semibold text-lg">
                 <span>Total</span><span>₹{total.toLocaleString()}</span>
               </div>

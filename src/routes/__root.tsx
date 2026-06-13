@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 
 import { CartProvider } from "@/lib/cart";
+import { WishlistProvider } from "@/lib/wishlist";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -78,11 +79,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Outlet />
-        <AiChat />
-        <Toaster position="bottom-left" richColors />
-      </CartProvider>
+      <WishlistProvider>
+        <CartProvider>
+          <Outlet />
+          <AiChat />
+          <Toaster position="bottom-left" richColors />
+        </CartProvider>
+      </WishlistProvider>
     </QueryClientProvider>
   );
 }

@@ -167,8 +167,23 @@ export async function fetchProducts(): Promise<Product[]> {
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  const all = await fetchProducts();
-  return all.find((p) => p.slug === slug) ?? null;
+  // Query by the slug column directly — avoids a full-table scan
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, categories(*), product_images(*)")
+    .eq("slug", slug)
+    .eq("available", true)
+    .single();
+
+  if (error) {
+    // Fallback: if slug column doesn't exist yet, do a client-side search
+    if (error.code === "PGRST116" || error.message?.includes("slug")) {
+      const all = await fetchProducts();
+      return all.find((p) => p.slug === slug) ?? null;
+    }
+    return null;
+  }
+  return normaliseProduct(data);
 }
 
 export async function fetchProductById(id: number): Promise<Product | null> {
